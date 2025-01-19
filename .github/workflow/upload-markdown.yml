@@ -1,0 +1,40 @@
+name: Upload Markdown to microCMS
+
+on:
+  push:
+    paths:
+      - "articles/**/*.md" # Markdownファイルの変更時にトリガー
+  pull_request:
+    paths:
+      - "articles/**/*.md"
+
+jobs:
+  lint-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. リポジトリのチェックアウト
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # 2. Node.js 環境のセットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # 3. 必要な依存関係をインストール
+      - name: Install dependencies
+        run: npm install
+
+      # 4. textlintでMarkdownを校正
+      - name: Run textlint
+        run: npx textlint "articles/**/*.md"
+
+      # 5. 校正が成功した場合、microCMSにアップロード
+      - name: Upload to microCMS
+        env:
+          MICROCMS_SERVICE_DOMAIN: ${{ secrets.MICROCMS_SERVICE_DOMAIN }}
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+        run: |
+          node uploadMarkdown.js
